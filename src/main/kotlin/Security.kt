@@ -1,17 +1,44 @@
 package com.example
 
+import com.auth0.jwt.JWT
+import com.auth0.jwt.algorithms.Algorithm
+// import com.example.models.GenericResponse
 import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
-import io.ktor.server.http.content.*
-import io.ktor.server.plugins.calllogging.*
-import io.ktor.server.plugins.contentnegotiation.*
-import io.ktor.server.plugins.di.*
-import io.ktor.server.plugins.statuspages.*
-import io.ktor.server.request.*
+import io.ktor.server.auth.*
+import io.ktor.server.auth.jwt.*
 import io.ktor.server.response.*
-import io.ktor.server.routing.*
-import org.slf4j.event.*
 
+// Configures JWT-based authentication.
 fun Application.configureSecurity() {
+    // In a real app, load these from a config file (e.g., application.conf)
+    val secret = "$$/later"
+    val issuer = "http://0.0.0.0:8080"
+    val audience = "plant-app-users"
+    val myRealm = "Plant App"
+
+    install(Authentication) {
+        jwt("auth-jwt") {
+            realm = myRealm
+            verifier(
+                JWT
+                    .require(Algorithm.HMAC256(secret))
+                    .withAudience(audience)
+                    .withIssuer(issuer)
+                    .build()
+            )
+            // This block validates the token and converts it to a Principal
+            validate { credential ->
+                if (credential.payload.getClaim("username").asString() != "") {
+                    JWTPrincipal(credential.payload)
+                } else {
+                    null
+                }
+            }
+            // This block handles failed authentication attempts
+            challenge { _, _ ->
+                call.respond(HttpStatusCode.Unauthorized, "Token is not valid or has expired")
+            }
+        }
+    }
 }
