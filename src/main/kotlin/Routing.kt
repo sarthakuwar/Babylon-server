@@ -11,6 +11,7 @@ import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import com.example.routes.authRoutes
 import org.slf4j.event.*
 
 fun Application.configureRouting() {
@@ -20,6 +21,7 @@ fun Application.configureRouting() {
         }
     }
     routing {
+        authRoutes()
         get("/") {
             call.respondText("Hello World!")
         }
