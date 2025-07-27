@@ -12,15 +12,15 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import org.jetbrains.exposed.sql.or // **FIX**: Added the required import for the 'or' operator
+import org.jetbrains.exposed.sql.or 
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.mindrot.jbcrypt.BCrypt
 import java.util.Date
 
-// Defines the /register and /login endpoints
+
 fun Route.authRoutes() {
-    // In a real app, load these from a config file
-    val secret = "your-super-secret-key-change-me"
+   
+    val secret = "..."
     val issuer = "http://0.0.0.0:8080"
     val audience = "plant-app-users"
 
@@ -28,7 +28,7 @@ fun Route.authRoutes() {
     route("/register") {
         post {
             val request = call.receive<AuthRequest>()
-            // Ensure email is provided for registration
+           
             if (request.email == null) {
                 call.respond(HttpStatusCode.BadRequest, GenericResponse("Email is required for registration"))
                 return@post
@@ -49,7 +49,7 @@ fun Route.authRoutes() {
                 User.new {
                     username = request.username
                     this.email = email
-                    // Hash the password before storing it
+                    
                     passwordHash = BCrypt.hashpw(request.password, BCrypt.gensalt())
                 }
             }
@@ -62,16 +62,16 @@ fun Route.authRoutes() {
         post {
             val request = call.receive<AuthRequest>()
 
-            // Find the user by username
+           
             val user = transaction { User.find { Users.username eq request.username }.firstOrNull() }
 
-            // Check if user exists and if the provided password matches the stored hash
+           
             if (user == null || !BCrypt.checkpw(request.password, user.passwordHash)) {
                 call.respond(HttpStatusCode.Unauthorized, GenericResponse("Invalid username or password"))
                 return@post
             }
 
-            // If credentials are valid, create a JWT
+        
             val token = JWT.create()
                 .withAudience(audience)
                 .withIssuer(issuer)
